@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "773454718482",
+    "project_id": "tatak-clearance",
+    "storage_bucket": "tatak-clearance.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:773454718482:android:4ba66fb61fb36e9005dacb",
+        "android_client_info": {
+          "package_name": "com.example.tatak"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDumWAsR6z-CTco51jC4Eff5cl8BHbCteo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
