@@ -64,7 +64,9 @@ class _ModeratorHomePageState extends State<ModeratorHomePage> {
           .doc(requestId)
           .update({
         'status': 'Approved',
-        'moderatorId': widget.userID, // Store the moderator's userID here
+        'moderatorId': widget.userID,
+        'approvedTimestamp':
+            FieldValue.serverTimestamp(), // Store the moderator's userID here
       });
 
       setState(() {}); // Refresh UI

@@ -19,6 +19,9 @@ class _StudentHomePageState extends State<StudentHomePage> {
   String department = 'Loading...';
   String college = 'Loading...';
   String club = 'Loading...';
+  String year = 'Loading...';
+  String course = 'Loading...';
+  String _semester = 'Loading...';
   bool isLoading = true; // Added loading state
 
   final List<String> offices = [
@@ -36,6 +39,26 @@ class _StudentHomePageState extends State<StudentHomePage> {
   ];
 
   Map<String, String> requestStatus = {};
+  Future<void> _fetchSemester() async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('Users') // Reference to the Users collection
+          .doc(widget.schoolId) // Get the specific user's document by schoolId
+          .get();
+
+      if (doc.exists) {
+        setState(() {
+          _semester = doc['semester'] ??
+              'No semester selected'; // Retrieve the semester from Firestore
+        });
+      }
+    } catch (e) {
+      print('Error fetching semester: $e');
+      setState(() {
+        _semester = 'Error fetching semester';
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -45,6 +68,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
       return;
     }
     _loadStudentInfo();
+    _fetchSemester();
   }
 
   Future<void> _loadStudentInfo() async {
@@ -64,6 +88,8 @@ class _StudentHomePageState extends State<StudentHomePage> {
           department = data?['department'] ?? 'Not Provided';
           college = data?['college'] ?? 'Not Provided';
           club = data?['club'] ?? 'Not Provided';
+          course = data?['course'] ?? 'Not Provided';
+          year = data?['year'] ?? 'Not Provided';
         });
       } else {
         print('Student document not found!');
@@ -198,6 +224,9 @@ class _StudentHomePageState extends State<StudentHomePage> {
         'firstName': firstName,
         'lastName': lastName,
         'club dept': club,
+        'year': year,
+        'course': course,
+        'approvedTimestamp': null,
       });
 
       final requestQuery = await FirebaseFirestore.instance
@@ -305,7 +334,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
             );
           },
         ),
-        title: const Text('Student Dashboard'),
+        title: Text("Student Dashboard - $_semester"),
         centerTitle: true,
         actions: [
           TextButton.icon(
@@ -338,6 +367,8 @@ class _StudentHomePageState extends State<StudentHomePage> {
                   context: context,
                   builder: (context) {
                     return StudentProfileDialog(
+                      course: course,
+                      year: year,
                       firstName: firstName,
                       lastName: lastName,
                       email: email,
@@ -367,18 +398,28 @@ class _StudentHomePageState extends State<StudentHomePage> {
                 itemCount: offices.isNotEmpty ? offices.length + 2 : 0,
                 itemBuilder: (context, index) {
                   if (index < 4) {
+                    // Show first 4 offices
                     return _buildOfficeCard(offices[index], offices[index]);
                   } else if (index == 4) {
+                    // Show 'Club'
                     return _buildOfficeCard('Club', 'Club - $club');
-                  } else if (index == 5) {
+                  } else if (index == 5 && college == 'CEAC') {
+                    // Show 'Club Department' only for CEAC
                     return _buildOfficeCard(
                         'Club Department', 'Club Dept - $department');
                   } else {
-                    return _buildOfficeCard(
-                        offices[index - 2], offices[index - 2]);
+                    // Offset based on how many custom items we already added
+                    int offset = (college == 'CEAC') ? 2 : 1;
+                    int adjustedIndex = index - offset;
+
+                    if (adjustedIndex < offices.length) {
+                      return _buildOfficeCard(
+                          offices[adjustedIndex], offices[adjustedIndex]);
+                    } else {
+                      return SizedBox.shrink();
+                    }
                   }
-                },
-              ),
+                }),
       ),
     );
   }

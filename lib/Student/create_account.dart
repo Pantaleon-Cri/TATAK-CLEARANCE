@@ -21,7 +21,66 @@ class _StudentCreateAccountState extends State<StudentCreateAccount> {
   String? _selectedCollege;
   String? _selectedDepartment;
   String? _selectedClub;
-  bool isLoading = false; // Added loading state
+  String? _selectedCourse;
+  String? _selectedYear;
+  String? _selectedSemester;
+  List<String> _semesterList = [];
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSemesters(); // Fetch semesters as soon as the widget is initialized
+  }
+
+  // Fetch semesters from Firestore
+  Future<void> _fetchSemesters() async {
+    setState(() {
+      isLoading = true; // start loading
+    });
+
+    try {
+      // 1) Query only the semesters marked available
+      final snapshot = await FirebaseFirestore.instance
+          .collection('SemesterOptions')
+          .where('isAvailableForStudents', isEqualTo: true)
+          .get();
+
+      // 2) If you want console logs for debugging
+      if (snapshot.docs.isEmpty) {
+        print('No available semesters found');
+      } else {
+        print('Found ${snapshot.docs.length} available semester(s)');
+      }
+
+      // 3) Sort locally and extract the 'semester' string safely
+      final docs = snapshot.docs;
+      docs.sort((a, b) {
+        final sa = (a.get('semester') as String?) ?? '';
+        final sb = (b.get('semester') as String?) ?? '';
+        return sa.compareTo(sb);
+      });
+
+      final List<String> semesters = docs
+          .map((doc) => (doc.get('semester') as String?) ?? '')
+          .where((s) => s.isNotEmpty)
+          .toList();
+
+      setState(() {
+        _semesterList = semesters;
+      });
+    } catch (e) {
+      // 4) Show real error in console and clear list on failure
+      print('Error fetching semesters: $e');
+      setState(() {
+        _semesterList = [];
+      });
+    } finally {
+      setState(() {
+        isLoading = false; // always stop loading
+      });
+    }
+  }
 
   void _register() async {
     if (!_formKey.currentState!.validate()) return;
@@ -58,6 +117,9 @@ class _StudentCreateAccountState extends State<StudentCreateAccount> {
           'college': _selectedCollege,
           'department': _selectedDepartment,
           'club': _selectedClub,
+          'course': _selectedCourse,
+          'year': _selectedYear,
+          'semester': _selectedSemester,
           'password': password, // Handle securely in production
         });
 
@@ -88,10 +150,14 @@ class _StudentCreateAccountState extends State<StudentCreateAccount> {
     _emailController.clear();
     _passwordController.clear();
     _confirmPasswordController.clear();
+
     setState(() {
       _selectedCollege = null;
       _selectedDepartment = null;
       _selectedClub = null;
+      _selectedCourse = null;
+      _selectedYear = null;
+      _selectedSemester = null;
     });
   }
 
@@ -103,11 +169,10 @@ class _StudentCreateAccountState extends State<StudentCreateAccount> {
         title: Text('Create Account as Student'),
         centerTitle: true,
       ),
-      resizeToAvoidBottomInset: true, // Prevents bottom overflow
+      resizeToAvoidBottomInset: true,
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Background image
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
@@ -116,14 +181,13 @@ class _StudentCreateAccountState extends State<StudentCreateAccount> {
               ),
             ),
           ),
-          // Centered content with proper constraints
           Align(
             alignment: Alignment.topCenter,
             child: SingleChildScrollView(
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxWidth: 600, // Ensures it doesn’t stretch too wide
-                  minWidth: 600, // Prevents extreme shrinking
+                  maxWidth: 600,
+                  minWidth: 600,
                 ),
                 child: Container(
                   padding: const EdgeInsets.all(16.0),
@@ -131,6 +195,44 @@ class _StudentCreateAccountState extends State<StudentCreateAccount> {
                     key: _formKey,
                     child: Column(
                       children: [
+                        isLoading
+                            ? CircularProgressIndicator()
+                            : DropdownButtonFormField<String>(
+                                value: _selectedSemester,
+                                hint: Text('Select Semester'),
+                                items: _semesterList.isEmpty
+                                    ? [
+                                        DropdownMenuItem(
+                                          value: null,
+                                          child: Text('No semesters available'),
+                                        )
+                                      ]
+                                    : _semesterList.map((semester) {
+                                        return DropdownMenuItem(
+                                          value: semester,
+                                          child: Text(semester),
+                                        );
+                                      }).toList(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedSemester = value;
+                                  });
+                                },
+                                decoration: InputDecoration(
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 15),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                validator: (value) =>
+                                    value == null || value.isEmpty
+                                        ? 'Please select a semester'
+                                        : null, // Add validator for Semester
+                              ),
+                        SizedBox(height: 5),
                         TextFormField(
                           controller: _schoolIdController,
                           decoration: InputDecoration(
@@ -155,6 +257,8 @@ class _StudentCreateAccountState extends State<StudentCreateAccount> {
                               _selectedCollege = value;
                               _selectedDepartment = null;
                               _selectedClub = null;
+                              _selectedCourse = null;
+                              _selectedYear = null;
                             });
                           },
                           decoration: InputDecoration(
@@ -163,17 +267,24 @@ class _StudentCreateAccountState extends State<StudentCreateAccount> {
                             contentPadding: EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 15),
                           ),
+                          validator: (value) => value == null || value.isEmpty
+                              ? 'Please select a college'
+                              : null, // Add validator for College
                         ),
                         SizedBox(height: 5),
                         RegistrationList(
                           selectedCollege: _selectedCollege,
                           selectedDepartment: _selectedDepartment,
                           selectedClub: _selectedClub,
+                          selectedCourse: _selectedCourse,
+                          selectedYear: _selectedYear,
                           onCollegeChanged: (college) {
                             setState(() {
                               _selectedCollege = college;
                               _selectedDepartment = null;
                               _selectedClub = null;
+                              _selectedCourse = null;
+                              _selectedYear = null;
                             });
                           },
                           onDepartmentChanged: (department) {
@@ -185,6 +296,18 @@ class _StudentCreateAccountState extends State<StudentCreateAccount> {
                           onClubChanged: (club) {
                             setState(() {
                               _selectedClub = club;
+                              _selectedCourse = null;
+                            });
+                          },
+                          onCourseChanged: (course) {
+                            setState(() {
+                              _selectedCourse = course;
+                              _selectedYear = null;
+                            });
+                          },
+                          onYearChanged: (year) {
+                            setState(() {
+                              _selectedYear = year;
                             });
                           },
                         ),
@@ -237,28 +360,21 @@ class _StudentCreateAccountState extends State<StudentCreateAccount> {
                           validator: (value) =>
                               value != _passwordController.text.trim()
                                   ? 'Passwords do not match'
-                                  : null,
+                                  : null, // Add validator for Confirm Password
                         ),
                         SizedBox(height: 5),
                         ElevatedButton(
                           onPressed: isLoading
                               ? null
-                              : _register, // Disable button when loading
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF0B3F33),
-                            minimumSize: Size(double.infinity, 50),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
+                              : () {
+                                  if (_formKey.currentState?.validate() ??
+                                      false) {
+                                    _register();
+                                  }
+                                },
                           child: isLoading
-                              ? CircularProgressIndicator(
-                                  color: Colors.white) // Show loader
-                              : Text(
-                                  'SIGN UP',
-                                  style: TextStyle(
-                                      fontSize: 16, color: Colors.white),
-                                ),
+                              ? CircularProgressIndicator()
+                              : Text('Create Account'),
                         ),
                       ],
                     ),

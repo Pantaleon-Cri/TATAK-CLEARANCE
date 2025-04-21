@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:online_clearance/Admin/admin_homepage.dart'; // AdminPage to navigate back
 
-class HistoryPage extends StatelessWidget {
+class DeclinePage extends StatelessWidget {
   // Function to set the status back to 'Pending'
   Future<void> _setStatusToPending(String moderatorId) async {
     try {
@@ -21,7 +21,7 @@ class HistoryPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(0xFF167E55),
-        title: Text('History'),
+        title: Text('Declined History'),
         centerTitle: true,
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
@@ -48,7 +48,7 @@ class HistoryPage extends StatelessWidget {
               stream: FirebaseFirestore.instance
                   .collection('moderators')
                   .where('status',
-                      isEqualTo: 'approved') // Show only approved moderators
+                      isEqualTo: 'decline') // Show only approved moderators
                   .snapshots(),
               builder: (context, snapshot) {
                 if (!snapshot.hasData) {
@@ -81,7 +81,6 @@ class HistoryPage extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('Email: ${moderator['clubEmail']}'),
-                            Text('Status: ${moderator['status']}'),
                           ],
                         ),
                         trailing: ElevatedButton(

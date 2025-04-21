@@ -7,6 +7,8 @@ import 'settings.dart';
 
 class StudentProfileDialog extends StatefulWidget {
   final String firstName;
+  final String year;
+  final String course;
   final String lastName;
   final String email;
   final String college;
@@ -17,6 +19,8 @@ class StudentProfileDialog extends StatefulWidget {
   const StudentProfileDialog({
     super.key,
     required this.firstName,
+    required this.year,
+    required this.course,
     required this.lastName,
     required this.email,
     required this.department,
@@ -73,6 +77,8 @@ class _StudentProfileDialogState extends State<StudentProfileDialog> {
                     _buildProfileDetail(
                         'Name:', '${widget.firstName} ${widget.lastName}'),
                     _buildProfileDetail('College:', widget.college),
+                    _buildProfileDetail(
+                        'Course/Year:', '${widget.course} ${widget.year}'),
                     _buildProfileDetail('Department:', widget.department),
                     _buildProfileDetail('Club:', widget.club),
                     _buildProfileDetail('School ID:', widget.schoolId),

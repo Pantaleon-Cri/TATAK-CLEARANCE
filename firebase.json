@@ -1,1 +1,49 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"tatak-clearance","appId":"1:773454718482:android:4ba66fb61fb36e9005dacb","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"tatak-clearance","configurations":{"android":"1:773454718482:android:4ba66fb61fb36e9005dacb","ios":"1:773454718482:ios:473eda4e1637babe05dacb","macos":"1:773454718482:ios:473eda4e1637babe05dacb","web":"1:773454718482:web:24802ed2fb59ac3305dacb","windows":"1:773454718482:web:a49cd76ff5204e3705dacb"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "tatak-clearance",
+          "appId": "1:773454718482:android:4ba66fb61fb36e9005dacb",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "tatak-clearance",
+          "configurations": {
+            "android": "1:773454718482:android:4ba66fb61fb36e9005dacb",
+            "ios": "1:773454718482:ios:473eda4e1637babe05dacb",
+            "macos": "1:773454718482:ios:473eda4e1637babe05dacb",
+            "web": "1:773454718482:web:24802ed2fb59ac3305dacb",
+            "windows": "1:773454718482:web:a49cd76ff5204e3705dacb"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+  {
+    "source": "**",
+    "headers": [
+      { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+      { "key": "Pragma", "value": "no-cache" },
+      { "key": "Expires", "value": "0" }
+    ]
+  }
+]
+  }
+}

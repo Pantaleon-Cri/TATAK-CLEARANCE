@@ -64,7 +64,7 @@ class _LoginPageState extends State<LoginPage> {
             String status = moderatorDoc['status']; // Retrieve the status
 
             if (storedUserID == id && storedPassword == password) {
-              if (status == 'approved') {
+              if (status == 'approve') {
                 String userID = moderatorDoc['userID'];
                 Navigator.pushReplacement(
                   context,

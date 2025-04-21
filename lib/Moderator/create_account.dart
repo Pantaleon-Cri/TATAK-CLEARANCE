@@ -183,8 +183,8 @@ class _CreatorCreateAccountState extends State<CreatorCreateAccount> {
                         SizedBox(height: 5),
 
                         // Additional Dropdowns for College/Department/Subcategory...
-                        if (_selectedCategory == 'COUNCIL' ||
-                            _selectedCategory == 'DEAN' ||
+                        if (_selectedCategory == 'College Council' ||
+                            _selectedCategory == 'College Dean' ||
                             _selectedCategory == 'Guidance') ...[
                           DropdownButtonFormField<String>(
                             value: _selectedCollege,

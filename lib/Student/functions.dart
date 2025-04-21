@@ -8,7 +8,9 @@ import 'package:online_clearance/Student/profile.dart';
 class StudentFunctions {
   static void fetchStudentInfo(
       String schoolId,
-      Function(String, String, String, String, String, String, String) onUpdate,
+      Function(String, String, String, String, String, String, String, String,
+              String)
+          onUpdate,
       BuildContext context) {
     // Updated signature
     FirebaseFirestore.instance
@@ -25,21 +27,25 @@ class StudentFunctions {
             studentData['department'] ?? 'N/A', // Fetch department
             studentData['schoolId'] ?? 'N/A',
             studentData['club'] ?? 'N/A',
-            studentData['college'] ?? 'N/A' // Fetch schoolId
-            );
+            studentData['college'] ?? 'N/A',
+            studentData['course'] ?? 'N/A',
+            studentData['year'] ?? 'N/A');
       } else {
-        onUpdate('N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A');
+        onUpdate('N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A', 'N/A');
       }
     }, onError: (error) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to fetch student info: $error')),
       );
-      onUpdate('Error', 'Error', 'Error', 'Error', 'Error', 'Error', 'Error');
+      onUpdate('Error', 'Error', 'Error', 'Error', 'Error', 'Error', 'Error',
+          'Error', 'Error');
     });
   }
 
   static Future<void> showProfileDialog(
     BuildContext context,
+    String course,
+    String year,
     String firstName,
     String lastName,
     String email,
@@ -52,6 +58,8 @@ class StudentFunctions {
       context: context,
       builder: (context) {
         return StudentProfileDialog(
+          year: year,
+          course: course,
           firstName: firstName,
           lastName: lastName,
           email: email,
