@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:online_clearance/Admin/approval_page.dart';
-import 'package:online_clearance/Admin/historyApproved_page.dart';
-import 'package:online_clearance/Admin/historyDeclined_page.dart';
-import 'package:online_clearance/Admin/list_moderator.dart';
+import 'package:online_clearance/Admin/Dashboard/approval_page.dart';
+import 'package:online_clearance/Admin/Dashboard/historyApproved_page.dart';
+import 'package:online_clearance/Admin/Dashboard/historyDeclined_page.dart';
+import 'package:online_clearance/Admin/Dashboard/list_moderator.dart';
 import 'package:online_clearance/Admin/list_students.dart';
 import 'package:online_clearance/Admin/manage_semester.dart';
 import 'package:online_clearance/Admin/settings.dart';

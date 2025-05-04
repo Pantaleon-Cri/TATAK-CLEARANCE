@@ -357,8 +357,8 @@ class _CreatorCreateAccountState extends State<CreatorCreateAccount> {
                             DropdownButtonFormField<String>(
                               value: _selectedDepartment,
                               hint: Text('Select Department'),
-                              items:
-                                  ['Natural Science', 'RE'].map((department) {
+                              items: ['No Club Departments for CED']
+                                  .map((department) {
                                 return DropdownMenuItem(
                                   value: department,
                                   child: Text(department),
@@ -381,7 +381,7 @@ class _CreatorCreateAccountState extends State<CreatorCreateAccount> {
                             DropdownButtonFormField<String>(
                               value: _selectedDepartment,
                               hint: Text('Select Department'),
-                              items: ['Business 1', 'Administration 1']
+                              items: ['No Club Departments for CBA']
                                   .map((department) {
                                 return DropdownMenuItem(
                                   value: department,
@@ -428,7 +428,7 @@ class _CreatorCreateAccountState extends State<CreatorCreateAccount> {
                             DropdownButtonFormField<String>(
                               value: _selectedDepartment,
                               hint: Text('Select Department'),
-                              items: ['Natural Science', 'Medical Courses']
+                              items: ['No Club Departments for CAS']
                                   .map((department) {
                                 return DropdownMenuItem(
                                   value: department,
@@ -584,31 +584,64 @@ class _CreatorCreateAccountState extends State<CreatorCreateAccount> {
   }
 
   List<String> _getSubCategoryOptions() {
-    if (_selectedCollege == 'CAS') {
-      if (_selectedDepartment == 'Natural Science') {
-        return ['Science Club', 'Math Club'];
-      } else if (_selectedDepartment == 'Medical Courses') {
-        return ['Sons', 'Phismets'];
-      }
-    } else if (_selectedCollege == 'CEAC') {
-      if (_selectedDepartment == 'CSD') {
-        return ['PSITS', 'BLIS'];
-      } else if (_selectedDepartment == 'SEAS') {
-        return ['PICE', 'ARCHI', 'EE', 'CompENG', 'ECE'];
-      }
-    } else if (_selectedCollege == 'CBA') {
-      if (_selectedDepartment == 'Business 1') {
-        return ['Club E1', 'Club E2'];
-      } else if (_selectedDepartment == 'Administration 1') {
-        return ['Club F1', 'Club F2'];
-      }
-    } else if (_selectedCollege == 'CED') {
-      if (_selectedDepartment == 'Natural Science') {
-        return ['Science', 'Math'];
-      } else if (_selectedDepartment == 'RE') {
-        return ['Club B1', 'Club B2'];
-      }
+    if (_selectedCollege == 'CAS' &&
+        _selectedDepartment == 'No Club Departments for CAS') {
+      return [
+        'SONS',
+        'PHISMETS',
+        'PC',
+        'NASSS',
+        'SDF',
+        'JSWAP',
+        'JPCAP',
+        'JPAP',
+        'PSS'
+      ];
     }
+
+    if (_selectedCollege == 'CEAC' && _selectedDepartment == 'CSD') {
+      return ['PSITS', 'BLIS'];
+    }
+
+    if (_selectedCollege == 'CEAC' && _selectedDepartment == 'SEAS') {
+      return ['PICE', 'ARCHI', 'EE', 'CompENG', 'ECE'];
+    }
+
+    if (_selectedCollege == 'CBA' && _selectedDepartment == 'Business 1') {
+      return ['JPIA', 'JPAMA', 'JHAMS', 'JFINEX', 'JPMAP', 'JPMA'];
+    }
+
+    if (_selectedCollege == 'CBA' &&
+        _selectedDepartment == 'Administration 1') {
+      return ['JPIA', 'JPAMA', 'JHAMS', 'JFINEX', 'JPMAP', 'JPMA'];
+    }
+
+    if (_selectedCollege == 'CED' && _selectedDepartment == 'Natural Science') {
+      return [
+        'PEFS',
+        'YES CLUB',
+        'KAMAFIL',
+        'MATH CLUB',
+        'JSEG',
+        'ENGLISH CLUB',
+        'APDM',
+        'RE CLUB'
+      ];
+    }
+
+    if (_selectedCollege == 'CED' && _selectedDepartment == 'RE') {
+      return [
+        'PEFS',
+        'YES CLUB',
+        'KAMAFIL',
+        'MATH CLUB',
+        'JSEG',
+        'ENGLISH CLUB',
+        'APDM',
+        'RE CLUB'
+      ];
+    }
+
     return [];
   }
 }

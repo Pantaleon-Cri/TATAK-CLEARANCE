@@ -187,7 +187,11 @@ class _RegistrationListState extends State<RegistrationList> {
 
   // Build the year dropdown
   Widget _buildYearDropdown() {
-    List<String> years = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+    List<String> years = [
+      '1st Year',
+      '2nd Year',
+      '3rd Year',
+    ];
 
     return DropdownButtonFormField<String>(
       value: widget.selectedYear,

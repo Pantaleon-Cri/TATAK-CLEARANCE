@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:online_clearance/Admin/ceac_page.dart';
-import 'package:online_clearance/Admin/cba_page.dart';
-import 'package:online_clearance/Admin/cas_page.dart';
-import 'package:online_clearance/Admin/ced_page.dart';
+import 'package:online_clearance/Admin/Pages/ceac_page.dart';
+import 'package:online_clearance/Admin/Pages/cba_page.dart';
+import 'package:online_clearance/Admin/Pages/cas_page.dart';
+import 'package:online_clearance/Admin/Pages/ced_page.dart';
 
 class DepartmentSelectionPage extends StatefulWidget {
   @override

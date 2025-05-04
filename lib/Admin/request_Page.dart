@@ -5,8 +5,10 @@ import 'package:intl/intl.dart';
 
 class StudentRequestsPage extends StatefulWidget {
   final String studentId;
+  final String semester; // Add semester to constructor
 
-  const StudentRequestsPage({required this.studentId, super.key});
+  const StudentRequestsPage(
+      {required this.studentId, required this.semester, super.key});
 
   @override
   State<StudentRequestsPage> createState() => _StudentRequestsPageState();
@@ -14,6 +16,30 @@ class StudentRequestsPage extends StatefulWidget {
 
 class _StudentRequestsPageState extends State<StudentRequestsPage> {
   bool isFlipped = false;
+  String? studentCollege;
+  Future<void> _fetchStudentCollege() async {
+    try {
+      var doc = await FirebaseFirestore.instance
+          .collection('Users')
+          .doc(widget.studentId)
+          .get();
+
+      if (doc.exists) {
+        setState(() {
+          studentCollege = doc['college'];
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error fetching student data: $e')));
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchStudentCollege();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,100 +50,108 @@ class _StudentRequestsPageState extends State<StudentRequestsPage> {
         centerTitle: true,
       ),
       body: Center(
-        child: Stack(
-          alignment: Alignment.center,
+        child: Column(
           children: [
-            StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('Requests')
-                  .where('studentId', isEqualTo: widget.studentId)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return CircularProgressIndicator();
-                }
+            // Display the clearance requests based on selected semester passed from ceacPage
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('Requests')
+                    .where('studentId', isEqualTo: widget.studentId)
+                    .where('semester',
+                        isEqualTo:
+                            widget.semester) // Filter by semester from ceacPage
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator();
+                  }
 
-                if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
-                }
+                  if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  }
 
-                final data = snapshot.data!.docs;
+                  final data = snapshot.data!.docs;
 
-                final mainOffices = [
-                  'College Dean',
-                  'Library',
-                  'DSA/NSTP',
-                  'Business Office',
-                  'Records Section'
-                ];
-                final deptOffices = [
-                  'College Council',
-                  'Department Club',
-                  'Club',
-                  'SSG',
-                  'Guidance',
-                  'GHAD',
-                  'PEC',
-                  'Clinic'
-                ];
+                  final mainOffices = [
+                    'College Dean',
+                    'Library',
+                    'DSA/NSTP',
+                    'Business Office',
+                    'Records Section'
+                  ];
+                  final deptOffices = [
+                    'College Council',
+                    if (studentCollege == 'CEAC') 'Club Department',
+                    'Club',
+                    'SSG',
+                    'Guidance',
+                    'GHAD',
+                    'PEC',
+                    'Clinic'
+                  ];
 
-                final mainRequests = data
-                    .where((doc) => mainOffices.contains(doc['office']))
-                    .toList();
-                final deptRequests = data
-                    .where((doc) => deptOffices.contains(doc['office']))
-                    .toList();
+                  final mainRequests = data
+                      .where((doc) => mainOffices.contains(doc['office']))
+                      .toList();
+                  final deptRequests = data
+                      .where((doc) => deptOffices.contains(doc['office']))
+                      .toList();
 
-                // Offices that haven't been requested
-                final requestedOffices = mainRequests
-                    .map((req) => req['office'])
-                    .toList()
-                    .followedBy(
-                        deptRequests.map((req) => req['office']).toList())
-                    .toSet();
+                  // Offices that haven't been requested
+                  final requestedOffices = mainRequests
+                      .map((req) => req['office'])
+                      .toList()
+                      .followedBy(
+                          deptRequests.map((req) => req['office']).toList())
+                      .toSet();
 
-                final notRequestedMainOffices = mainOffices
-                    .where((office) => !requestedOffices.contains(office))
-                    .toList();
-                final notRequestedDeptOffices = deptOffices
-                    .where((office) => !requestedOffices.contains(office))
-                    .toList();
+                  final notRequestedMainOffices = mainOffices
+                      .where((office) => !requestedOffices.contains(office))
+                      .toList();
+                  final notRequestedDeptOffices = deptOffices
+                      .where((office) => !requestedOffices.contains(office))
+                      .toList();
 
-                return AnimatedSwitcher(
-                  duration: Duration(milliseconds: 600),
-                  transitionBuilder: (child, animation) {
-                    final rotate =
-                        Tween(begin: pi, end: 0.0).animate(animation);
-                    return AnimatedBuilder(
-                      animation: rotate,
-                      child: child,
-                      builder: (context, child) {
-                        final isUnder = (ValueKey(isFlipped) != child?.key);
-                        var tilt = (isUnder
-                            ? min(rotate.value, pi / 2)
-                            : rotate.value);
-                        return Transform(
-                          transform: Matrix4.rotationY(tilt),
-                          alignment: Alignment.center,
-                          child: child,
-                        );
-                      },
-                    );
-                  },
-                  child: isFlipped
-                      ? DepartmentClearanceCard(
-                          requests: deptRequests,
-                          notRequestedOffices: notRequestedDeptOffices,
-                          key: ValueKey(true),
-                        )
-                      : MainClearanceCard(
-                          requests: mainRequests,
-                          studentId: widget.studentId,
-                          notRequestedOffices: notRequestedMainOffices,
-                          key: ValueKey(false),
-                        ),
-                );
-              },
+                  return AnimatedSwitcher(
+                    duration: Duration(milliseconds: 600),
+                    transitionBuilder: (child, animation) {
+                      final rotate =
+                          Tween(begin: pi, end: 0.0).animate(animation);
+                      return AnimatedBuilder(
+                        animation: rotate,
+                        child: child,
+                        builder: (context, child) {
+                          final isUnder = (ValueKey(isFlipped) != child?.key);
+                          var tilt = (isUnder
+                              ? min(rotate.value, pi / 2)
+                              : rotate.value);
+                          return Transform(
+                            transform: Matrix4.rotationY(tilt),
+                            alignment: Alignment.center,
+                            child: child,
+                          );
+                        },
+                      );
+                    },
+                    child: isFlipped
+                        ? DepartmentClearanceCard(
+                            requests: deptRequests,
+                            notRequestedOffices: notRequestedDeptOffices,
+
+                            semester: widget.semester, // Pass semester here
+                            key: ValueKey(true),
+                          )
+                        : MainClearanceCard(
+                            requests: mainRequests,
+                            studentId: widget.studentId,
+                            notRequestedOffices: notRequestedMainOffices,
+                            semester: widget.semester, // Pass semester here
+                            key: ValueKey(false),
+                          ),
+                  );
+                },
+              ),
             ),
           ],
         ),
@@ -139,16 +173,39 @@ class MainClearanceCard extends StatelessWidget {
   final List<QueryDocumentSnapshot> requests;
   final String studentId;
   final List<String> notRequestedOffices;
+  final String semester; // Added semester parameter
 
   const MainClearanceCard({
     required this.requests,
     required this.studentId,
     required this.notRequestedOffices,
+    required this.semester, // Added semester parameter
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
+    return _buildClearanceCard(
+      context: context,
+      text: 'Clearance',
+      title: '${semester}', // Display the semester dynamically
+      studentId: studentId,
+      requests: requests,
+      notRequestedOffices: notRequestedOffices,
+      note:
+          'Note: The RECORDS SECTION will release your EXAM PERMIT for the FINALS if you can present this clearance fully accomplished',
+    );
+  }
+
+  Widget _buildClearanceCard({
+    required BuildContext context,
+    required String text,
+    required String title,
+    required String studentId,
+    required List<QueryDocumentSnapshot> requests,
+    required List<String> notRequestedOffices,
+    required String note,
+  }) {
     return Container(
       width: 420,
       padding: const EdgeInsets.all(16),
@@ -166,11 +223,11 @@ class MainClearanceCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          Text('CLEARANCE',
+          Text(title,
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          Text('1st Semester 2024-2025'),
           SizedBox(height: 16),
           FutureBuilder<DocumentSnapshot>(
+            // Fetch student data
             future: FirebaseFirestore.instance
                 .collection('Users')
                 .doc(studentId)
@@ -200,7 +257,6 @@ class MainClearanceCard extends StatelessWidget {
           ),
           Divider(),
           ...requests.map((req) => _buildStatus(req)).toList(),
-          // Display not requested offices
           ...notRequestedOffices
               .map((office) => Padding(
                     padding: const EdgeInsets.only(bottom: 8),
@@ -221,7 +277,7 @@ class MainClearanceCard extends StatelessWidget {
                         ' will release your EXAM PERMIT for the FINALS if you can present this clearance fully accomplished'),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -266,30 +322,49 @@ class MainClearanceCard extends StatelessWidget {
 class DepartmentClearanceCard extends StatelessWidget {
   final List<QueryDocumentSnapshot> requests;
   final List<String> notRequestedOffices;
+  final String semester; // Added semester parameter
 
   const DepartmentClearanceCard({
     required this.requests,
     required this.notRequestedOffices,
+    required this.semester, // Added semester parameter
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
+    return _buildClearanceCard(
+      context: context,
+      text: 'Department Clearance',
+      title: '${semester}', // Display the semester dynamically
+      requests: requests,
+      notRequestedOffices: notRequestedOffices,
+      note:
+          'Note: The Dean of Your College will sign if you can present this clearance fully accomplished',
+    );
+  }
+
+  Widget _buildClearanceCard({
+    required BuildContext context,
+    required String text,
+    required String title,
+    required List<QueryDocumentSnapshot> requests,
+    required List<String> notRequestedOffices,
+    required String note,
+  }) {
     return Container(
       width: 420,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.black),
+        border: Border.all(color: Colors.deepPurple, width: 2),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('DEPARTMENT CLEARANCE',
+          Text(title,
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          Text('1st Semester 2024-2025'),
           SizedBox(height: 16),
           ...requests.map((req) => _buildStatus(req)).toList(),
-          // Display not requested offices
           ...notRequestedOffices
               .map((office) => Padding(
                     padding: const EdgeInsets.only(bottom: 8),
@@ -297,20 +372,7 @@ class DepartmentClearanceCard extends StatelessWidget {
                   ))
               .toList(),
           SizedBox(height: 16),
-          RichText(
-            text: TextSpan(
-              style: TextStyle(color: Colors.black, fontSize: 12),
-              children: [
-                TextSpan(text: 'Note: The '),
-                TextSpan(
-                    text: 'Dean of Your College',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                TextSpan(
-                    text:
-                        ' will sign if you can present this clearance fully accomplished'),
-              ],
-            ),
-          ),
+          Text(note, style: TextStyle(fontSize: 12)),
         ],
       ),
     );

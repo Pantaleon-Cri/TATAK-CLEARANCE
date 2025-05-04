@@ -1,11 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:online_clearance/Student/profile.dart';
+import 'package:online_clearance/Student/records.dart';
+import 'package:online_clearance/Student/updateProfile.dart';
 
 class StudentHomePage extends StatefulWidget {
   final String schoolId;
+  final String semester;
 
-  const StudentHomePage({super.key, required this.schoolId});
+  const StudentHomePage(
+      {super.key, required this.schoolId, required this.semester});
 
   @override
   State<StudentHomePage> createState() => _StudentHomePageState();
@@ -22,6 +26,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
   String year = 'Loading...';
   String course = 'Loading...';
   String _semester = 'Loading...';
+  String status = 'Loading...';
   bool isLoading = true; // Added loading state
 
   final List<String> offices = [
@@ -39,6 +44,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
   ];
 
   Map<String, String> requestStatus = {};
+
   Future<void> _fetchSemester() async {
     try {
       final doc = await FirebaseFirestore.instance
@@ -67,8 +73,9 @@ class _StudentHomePageState extends State<StudentHomePage> {
       print('Error: School ID is empty');
       return;
     }
-    _loadStudentInfo();
     _fetchSemester();
+    _loadRequestStatus();
+    _loadStudentInfo();
   }
 
   Future<void> _loadStudentInfo() async {
@@ -110,6 +117,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
       final requestQuery = await FirebaseFirestore.instance
           .collection('Requests')
           .where('studentId', isEqualTo: widget.schoolId)
+          .where('semester', isEqualTo: _semester) // Filter by semester
           .get();
 
       if (requestQuery.docs.isNotEmpty) {
@@ -129,6 +137,9 @@ class _StudentHomePageState extends State<StudentHomePage> {
   Future<void> _requestToOffice(String office) async {
     List<String> requiredApprovals = [];
 
+    // Check the student's college to determine if Club Department approval is needed
+    bool isCEACStudent = college == 'CEAC';
+
     // Define the approval dependencies
     switch (office) {
       case 'Club Department':
@@ -137,7 +148,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
         }
         break;
       case 'College Council':
-        if (requestStatus['Club Department'] != 'Approved') {
+        if (isCEACStudent && requestStatus['Club Department'] != 'Approved') {
           requiredApprovals.add('Club Department');
         }
         break;
@@ -147,13 +158,21 @@ class _StudentHomePageState extends State<StudentHomePage> {
           'Clinic',
           'GHAD',
           'Guidance',
-          'College Council'
+          'SSG',
+          'Club',
+          'College Council' // exclude 'Club Department' from this loop
         ]) {
           if (requestStatus[required] != 'Approved') {
             requiredApprovals.add(required);
           }
         }
+
+        // Add this separately for CEAC students only
+        if (isCEACStudent && requestStatus['Club Department'] != 'Approved') {
+          requiredApprovals.add('Club Department');
+        }
         break;
+
       case 'SSG':
         if (requestStatus['College Council'] != 'Approved') {
           requiredApprovals.add('College Council');
@@ -183,26 +202,6 @@ class _StudentHomePageState extends State<StudentHomePage> {
         }
         break;
     }
-    void _showRequirementDialog(String office, List<String> missingApprovals) {
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text('Requirements Not Met'),
-            content: Text(
-              'To request clearance from $office, you first need approval from:\n\n'
-              '${missingApprovals.join(', ')}',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
-    }
 
     // Show dialog if there are missing approvals
     if (requiredApprovals.isNotEmpty) {
@@ -215,6 +214,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
     });
 
     try {
+      // Add semester field to the request when sending it to Firestore
       await FirebaseFirestore.instance.collection('Requests').add({
         'studentId': widget.schoolId,
         'office': office,
@@ -227,12 +227,15 @@ class _StudentHomePageState extends State<StudentHomePage> {
         'year': year,
         'course': course,
         'approvedTimestamp': null,
+        'semester': _semester, // Add semester field
       });
 
+      // Query Firestore to fetch the request based on studentId, office, and semester
       final requestQuery = await FirebaseFirestore.instance
           .collection('Requests')
           .where('studentId', isEqualTo: widget.schoolId)
           .where('office', isEqualTo: office)
+          .where('semester', isEqualTo: _semester) // Filter by semester
           .get();
 
       if (requestQuery.docs.isNotEmpty) {
@@ -244,6 +247,28 @@ class _StudentHomePageState extends State<StudentHomePage> {
     } catch (e) {
       print('Error sending request: $e');
     }
+  }
+
+// Show dialog for missing approvals
+  void _showRequirementDialog(String office, List<String> missingApprovals) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Requirements Not Met'),
+          content: Text(
+            'To request clearance from $office, you first need approval from:\n\n'
+            '${missingApprovals.join(', ')}',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildOfficeCard(String officeKey, String displayName) {
@@ -334,7 +359,14 @@ class _StudentHomePageState extends State<StudentHomePage> {
             );
           },
         ),
-        title: Text("Student Dashboard - $_semester"),
+        title: Text(
+          "$_semester",
+          style: TextStyle(
+            fontSize: 15, // <-- customize the size here
+            fontWeight: FontWeight.bold, // optional: make it bold
+            color: Colors.black, // optional: change color
+          ),
+        ),
         centerTitle: true,
         actions: [
           TextButton.icon(
@@ -342,7 +374,7 @@ class _StudentHomePageState extends State<StudentHomePage> {
             icon:
                 const Icon(Icons.refresh, color: Colors.white), // Refresh icon
             label: const Text(
-              'Refresh',
+              '',
               style: TextStyle(color: Colors.white),
             ), // Refresh text
           ),
@@ -378,6 +410,37 @@ class _StudentHomePageState extends State<StudentHomePage> {
                       club: club,
                     );
                   },
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.edit),
+              title: const Text('Update Info'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UpdateStudentInfoPage(
+                      schoolId: widget.schoolId,
+                    ),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.history),
+              title: const Text('View Clearance History'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => StudentRecordPage(
+                      studentId: widget.schoolId,
+                      semester: widget.semester,
+                    ),
+                  ),
                 );
               },
             ),
@@ -464,5 +527,21 @@ class _StudentHomePageState extends State<StudentHomePage> {
         );
       },
     );
+  }
+
+  Future<void> _initializeData() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    // Load student info
+    await _fetchSemester();
+    await _loadRequestStatus();
+    await _loadStudentInfo(); // Load semester next
+    // Only now load request status with correct semester
+
+    setState(() {
+      isLoading = false;
+    });
   }
 }

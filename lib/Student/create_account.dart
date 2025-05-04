@@ -96,15 +96,17 @@ class _StudentCreateAccountState extends State<StudentCreateAccount> {
     final password = _passwordController.text.trim();
 
     try {
-      final doc = await FirebaseFirestore.instance
+      // Check if the schoolId exists with a different semester
+      final querySnapshot = await FirebaseFirestore.instance
           .collection('Users')
-          .doc(schoolId)
+          .where('schoolId', isEqualTo: schoolId)
+          .where('semester', isEqualTo: _selectedSemester)
           .get();
 
-      if (doc.exists) {
+      if (querySnapshot.docs.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('ID already exists.',
+              content: Text('You have already registered for this semester.',
                   style: TextStyle(color: Colors.red)),
               backgroundColor: Colors.white),
         );
@@ -120,7 +122,8 @@ class _StudentCreateAccountState extends State<StudentCreateAccount> {
           'course': _selectedCourse,
           'year': _selectedYear,
           'semester': _selectedSemester,
-          'password': password, // Handle securely in production
+          'password': password,
+          'status': null // Handle securely in production
         });
 
         ScaffoldMessenger.of(context)
@@ -195,43 +198,6 @@ class _StudentCreateAccountState extends State<StudentCreateAccount> {
                     key: _formKey,
                     child: Column(
                       children: [
-                        isLoading
-                            ? CircularProgressIndicator()
-                            : DropdownButtonFormField<String>(
-                                value: _selectedSemester,
-                                hint: Text('Select Semester'),
-                                items: _semesterList.isEmpty
-                                    ? [
-                                        DropdownMenuItem(
-                                          value: null,
-                                          child: Text('No semesters available'),
-                                        )
-                                      ]
-                                    : _semesterList.map((semester) {
-                                        return DropdownMenuItem(
-                                          value: semester,
-                                          child: Text(semester),
-                                        );
-                                      }).toList(),
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedSemester = value;
-                                  });
-                                },
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 15),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                validator: (value) =>
-                                    value == null || value.isEmpty
-                                        ? 'Please select a semester'
-                                        : null, // Add validator for Semester
-                              ),
                         SizedBox(height: 5),
                         TextFormField(
                           controller: _schoolIdController,

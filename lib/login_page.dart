@@ -35,12 +35,14 @@ class _LoginPageState extends State<LoginPage> {
           String storedPassword = userDoc['password'];
 
           if (storedPassword == password) {
-            String schoolId = userDoc['schoolId']; // Retrieve the schoolId
+            String schoolId = userDoc['schoolId'];
+            String semester = userDoc['semester']; // Retrieve the schoolId
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
                 builder: (context) => StudentHomePage(
-                  schoolId: schoolId, // Pass the actual schoolId
+                  schoolId: schoolId,
+                  semester: semester, // Pass the actual schoolId
                 ),
               ),
             );
